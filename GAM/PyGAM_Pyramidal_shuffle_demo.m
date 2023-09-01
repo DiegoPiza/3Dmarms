@@ -352,8 +352,8 @@ if sum(models_reject)>0
 
             temporal.gz_pl{j}=gam_grid_gz_pl;
             temporal.gz_pl_shuffle{j}=shuffle_gz_pl;
-            temporal.gz_hd{j}=gam_grid_pl_hd;
-            temporal.gz_hd_shuffle{j}=shuffle_pl_hd;
+            temporal.pl_hd{j}=gam_grid_pl_hd;
+            temporal.pl_hd_shuffle{j}=shuffle_pl_hd;
             
             models_reject2=[gam_grid_gz_pl.reject_h0 gam_grid_pl_hd.reject_h0];
             models_ED2=[gam_grid_gz_pl.ED_normalized2shuffle gam_grid_pl_hd.ED_normalized2shuffle];
