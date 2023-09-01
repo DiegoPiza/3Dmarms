@@ -1,4 +1,5 @@
-%% This script run the GAM analysis described in methods, figure S3a, on putative pyramidal neurons
+%% This script runs the GAM analysis described in methods, figure S3a, on putative pyramidal neurons
+% To install PyGAM, follow the instructions here (https://pygam.readthedocs.io/en/latest/) for pip installation 
 clear all
 close all
 rng shuffle
