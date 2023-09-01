@@ -1,4 +1,4 @@
-%%
+%% This script run the GAM analysis described in methods, figure S3a, on putative pyramidal neurons
 clear all
 close all
 rng shuffle
