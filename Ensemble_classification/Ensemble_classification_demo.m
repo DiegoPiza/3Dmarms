@@ -39,5 +39,4 @@ accuracytotal=nanmean(accuracytotal);
 best_decoding_total(ens_size)=best_decoding;
 best_index_total(ens_size)=best_index;
 selectedFeatures=[selectedFeatures all_sessionsfloor_iteration(:,best_index,:)];
-save('best20unitsC_50trials_4place1346Bin','selectedFeatures','best_index_total','best_decoding_total','neuronsIDTotalfl')
 end
