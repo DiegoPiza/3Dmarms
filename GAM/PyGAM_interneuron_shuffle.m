@@ -1,4 +1,5 @@
-%%
+%% %% This script runs the GAM analysis described in methods, figure S3a, on putative interneurons
+
 clear all
 close all
 rng shuffle
