@@ -10,13 +10,6 @@ types_ID=string(compactWave.UnitIDs);
 
 
 TrackingData=even_TData(TrackingData);
-TrackingData30hz=downsample_TData(TrackingData,3);
-TrackingData=TrackingData30hz;
-% if exist('ainp1','var') == 1
-% puls=ainp1(3:end,3);
-% else
-%     puls=chan129(3:end,3);
-% end
 
 puls=TrackingData.neural_time;
 fields=fieldnames(units.singleunits);
