@@ -1,11 +1,11 @@
-function heatm=Head_Orientation_No_floors(TrackingData)
+function maze_view=Head_Orientation_No_floors(TrackingData)
  % Head_Orientation_No_floors determines the orientation of an animal in a chamber.
     %
     % Input:
     % - TrackingData: Structure containing the position and orientation data
     %
     % Output:
-    % - heatm: Matrix representing the heat map of the animal's orientation
+    % - maze_view: Matrix representing the coordinates in x,y,z of the head orientation projection on the maze walls
 
 %Linear projection of rotated vectors (quiver) corresponding to orientation
 %of the animal inside the chamber,
@@ -177,11 +177,11 @@ y2=((1.4-coefficientsz(:,4))./coefficientsz(:,3));
 heaty((heaty==0 | heaty==1.145)&(zbott))=y1((heaty==0 | heaty==1.145)&(zbott));
 heaty((heaty==0 | heaty==1.145)&(ztop))=y2((heaty==0 | heaty==1.145)&(ztop));
 heatz=heatz';
-heatm=[];
-heatm(:,2)=heaty;
-heatm(:,1)=heatx;
-heatm=heatm(1:length(heatz),:);
-heatm(:,3)=heatz;
-heatm(end+1:length(heaty),:)=nan;
+maze_view=[];
+maze_view(:,2)=heaty;
+maze_view(:,1)=heatx;
+maze_view=maze_view(1:length(heatz),:);
+maze_view(:,3)=heatz;
+maze_view(end+1:length(heaty),:)=nan;
 % close all
 end
