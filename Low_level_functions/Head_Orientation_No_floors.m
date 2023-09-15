@@ -26,47 +26,7 @@ floor.B=TrackingData.ZPosition>0.6 & TrackingData.ZPosition<1;%second floor half
 floor.C=TrackingData.ZPosition>1 ;%third floor half left
 
 
-
-%scattergym(TrackingData)
-
-
-% Orientation analysis
-%Quaternions to Euler 360, Z Yaw, X Pitch, Y Roll
 index=1:length(TrackingData.XPosition);
-%     ux = [];
-%     vx = [];
-%     wx = [];
-%     uy = [];
-%     vy = [];
-%     wy = [];
-%     uz = [];
-%     vz = [];
-%     wz = [];
-% for i=1:length(find(index))
-%     WQuat=TrackingData.WQuat(index(i));
-%     iXQuat=TrackingData.iXQuat(index(i));
-%     jYQuat=TrackingData.jYQuat(index(i));
-%     kZQuat=TrackingData.kZQuat(index(i));
-%     
-%     R=quat2rotm([WQuat iXQuat jYQuat kZQuat]);%q = [w x y z]
-%     ux(i) = R(1,1,1:1);
-%     vx(i) = R(2,1,1:1);
-%     wx(i) = R(3,1,1:1);
-%     uy(i) = R(1,2,1:1);
-%     vy(i) = R(2,2,1:1);
-%     wy(i) = R(3,2,1:1);
-%     uz(i) = R(1,3,1:1);
-%     vz(i) = R(2,3,1:1);
-%     wz(i) = R(3,3,1:1);   
-%     
-% end
-
-%Gaussian smoothing, kernel width = 200ms at 60hz sampling rate
-
-%     WQuat=smoothdata(TrackingData.WQuat,1,'gaussian',12);
-%     iXQuat=smoothdata(TrackingData.iXQuat,1,'gaussian',12);
-%     jYQuat=smoothdata(TrackingData.jYQuat,1,'gaussian',12);
-%     kZQuat=smoothdata(TrackingData.kZQuat,1,'gaussian',12);
 
     WQuat= TrackingData.WQuat;
     iXQuat=TrackingData.iXQuat;
@@ -89,11 +49,10 @@ index=1:length(TrackingData.XPosition);
 clear WQuat iXQuat jYQuat kZQuat R i
 %index=find(TrackingData.XPosition(social.A | social.B | social.C | social.D)); 
 
-h=quiver3(TrackingData.XPosition(index),TrackingData.YPosition(index),TrackingData.ZPosition(index), uy(index), vy(index), wy(index),100,'g','Visible','off');
 coefficients=[];
 coefficientsz=[];
 
-coefficients(:,1)=(h.VData)./(h.UData); %m - slope 
+coefficients(:,1)=vy./uy; %m - slope 
 coefficients(:,2)=TrackingData.YPosition(index)-(TrackingData.XPosition(index).*coefficients(:,1));% b point
 x=[];
 y=[];
