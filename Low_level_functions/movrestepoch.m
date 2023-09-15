@@ -2,6 +2,14 @@ function [mov rest start_end_mov  peaks_mov start_end_rest  peaks_rest locs amp_
 %%
 % This function processes tracking data to extract movement and resting epochs.
 % The function returns various statistics related to the movement and resting data.
+%  mov= movement timestamps
+% rest= no movement timestamps
+% start_end_mov= onset and offset timestamps of movements
+% peaks_mov= peak movement velocity 
+% start_end_rest= onset and offset timestamps of rest epochs
+% peaks_rest= peak speed of  rest epochs
+% locs= timestamps for the peak velocity of head movements
+% amp_mov= amplitude in cm movements
 
 %movement epochs
 
