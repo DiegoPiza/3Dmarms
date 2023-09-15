@@ -1,8 +1,11 @@
 function [fix, start_end_sac, peaks_sac, start_end_fix, peaks_fix, locss, amplitudesac] = fixsacepoch(TrackingData)
-%FIXSACEPOCH Process tracking data to determine saccade and fixation epochs
-%   This function calculates saccade and fixation epochs based on 
-%   angular velocity of the head. It returns the periods and peaks for 
-%   both saccades and fixations.
+%FIXSACEPOCH Process tracking data to determine rapid head movements and fixation epochs
+%  fix= fixation timestamps
+% start_end_sac= onset and offset timestamps of head movements
+% peaks_sac= peak head movement velocity 
+% start_end_fix= onset and offset timestamps of head fixations
+% locss= timestamps for the peak velocity of head movements
+% amplitudesac= amplitude in degrees of head movement
 
     % Calculate angular velocity
     ang_vel = HeadSpeed(TrackingData, 1/60, 0);
