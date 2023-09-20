@@ -1,4 +1,16 @@
 function [test_indices, train_indices] = crossvalpartitionDBP(N, n_folds)
+% crossvalpartitionDBP: Partition data into training and testing sets for cross-validation.
+    %
+    % INPUTS:
+    % - N: Total number of data points.
+    % - n_folds: Number of cross-validation folds.
+    %
+    % OUTPUTS:
+    % - test_indices: Logical matrix of size [N x n_folds] where each column represents
+    %                 test set indices for a particular fold.
+    % - train_indices: Logical matrix of size [N x n_folds] where each column represents
+    %                  training set indices for a particular fold.
+   
     % Calculate the size of each fold
     fold_size = floor(N / n_folds);
 
