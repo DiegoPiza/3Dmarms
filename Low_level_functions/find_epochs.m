@@ -10,7 +10,7 @@ function epochs = find_epochs( cc, threshold, sign,gap )
 % Edits by DBP 2022
 % threshold sign - positive = true (more than >), negative = false (less
 % than < )
-% gap (in number of samples) allows gaps of gap many samples (positive integer)
+% gap (in number of samples) allows gaps of 'n' many samples (positive integer)
 % OUTPUT
 % epochs - structure with epoch start/end times
 %
