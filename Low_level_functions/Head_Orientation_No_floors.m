@@ -105,12 +105,12 @@ heatx=x;
 
 % x=uy;
 % y=vy;
-% z=wya;
+% z=wy;
 coefficientsz=[];
 heatz=[];
-coefficientsz(:,1)=(wya)./(uy); %m - slope z/x
+coefficientsz(:,1)=(wy)./(uy); %m - slope z/x
 coefficientsz(:,2)=TrackingData.ZPosition(index)-(TrackingData.XPosition(index).*coefficientsz(:,1));% b point
-coefficientsz(:,3)=(wya)./(vy); %m - slope z/y
+coefficientsz(:,3)=(wy)./(vy); %m - slope z/y
 coefficientsz(:,4)=TrackingData.ZPosition(index)-(TrackingData.YPosition(index).*coefficientsz(:,3));% b point
 z1=coefficientsz(:,2);
 z2=(coefficientsz(:,1).*0.6)+coefficientsz(:,2);
