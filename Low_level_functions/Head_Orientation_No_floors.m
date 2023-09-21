@@ -63,8 +63,8 @@ x(:,2)=(0.6.*coefficients(:,1))+coefficients(:,2)>0&(0.6.*coefficients(:,1))+coe
 x=x(:,1)==1 & x(:,2)==1;
 x=double(x);
 x(x==0)=nan;
-x(h.UData>0&x>0)=0.6;
-x(h.UData<0&x>0)=0;
+x(uy>0&x>0)=0.6;
+x(uy<0&x>0)=0;
 y=(0.6.*coefficients(:,1))+coefficients(:,2);
 y2=coefficients(:,2);
 y(x==0)=y2(x==0);
@@ -73,28 +73,28 @@ x2=((1.145-coefficients(:,2))./coefficients(:,1))>0&((1.145-coefficients(:,2))./
 x3=x1==1 & x2==1;
 x1=(-coefficients(:,2)./coefficients(:,1));
 x2=((1.145-coefficients(:,2))./coefficients(:,1));
-x(h.VData<0&x3)=x1(h.VData<0&x3);
-x(h.VData>0&x3)=x2(h.VData>0&x3);
-y(h.VData<0&x3)=0;
-y(h.VData>0&x3)=1.145;
+x(vy<0&x3)=x1(vy<0&x3);
+x(vy>0&x3)=x2(vy>0&x3);
+y(vy<0&x3)=0;
+y(vy>0&x3)=1.145;
 
 y1=coefficients(:,2); %y values at x=0
 y2=(0.6.*coefficients(:,1))+coefficients(:,2); %y values at x=0.6
 y(isnan(x))=nan;
 
 %vectors that cross two orthogonal walls L (diagonal)
-x(isnan(x)&x2>0&x2<0.6&h.VData>0)=x2(isnan(x)&x2>0&x2<0.6&h.VData>0);
-y(isnan(y)&x2>0&x2<0.6&h.VData>0)=1.145;
+x(isnan(x)&x2>0&x2<0.6&vy>0)=x2(isnan(x)&x2>0&x2<0.6&vy>0);
+y(isnan(y)&x2>0&x2<0.6&vy>0)=1.145;
 
 
-x(isnan(x)&x1>0&x1<0.6&h.VData<0)=x1(isnan(x)&x1>0&x1<0.6&h.VData<0);
-y(isnan(y)&x1>0&x1<0.6&h.VData<0)=0;
+x(isnan(x)&x1>0&x1<0.6&vy<0)=x1(isnan(x)&x1>0&x1<0.6&vy<0);
+y(isnan(y)&x1>0&x1<0.6&vy<0)=0;
 
-y(isnan(y)&y2>0&y2<1.145&h.UData>0)=y2(isnan(x)&y2>0&y2<1.145&h.UData>0);
-x(isnan(x)&y2>0&y2<1.145&h.UData>0)=0.6;
+y(isnan(y)&y2>0&y2<1.145&uy>0)=y2(isnan(x)&y2>0&y2<1.145&uy>0);
+x(isnan(x)&y2>0&y2<1.145&uy>0)=0.6;
 
-y(isnan(y)&y1>0&y1<1.145&h.UData<0)=y1(isnan(x)&y1>0&y1<1.145&h.UData<0);
-x(isnan(x)&y1>0&y1<1.145&h.UData<0)=0;
+y(isnan(y)&y1>0&y1<1.145&uy<0)=y1(isnan(x)&y1>0&y1<1.145&uy<0);
+x(isnan(x)&y1>0&y1<1.145&uy<0)=0;
 
 
 
@@ -103,14 +103,14 @@ heatx=x;
 
 % Z axis slope component
 
-% x=h.UData;
-% y=h.VData;
+% x=uy;
+% y=vy;
 % z=h.WData;
 coefficientsz=[];
 heatz=[];
-coefficientsz(:,1)=(h.WData)./(h.UData); %m - slope z/x
+coefficientsz(:,1)=(h.WData)./(uy); %m - slope z/x
 coefficientsz(:,2)=TrackingData.ZPosition(index)-(TrackingData.XPosition(index).*coefficientsz(:,1));% b point
-coefficientsz(:,3)=(h.WData)./(h.VData); %m - slope z/y
+coefficientsz(:,3)=(h.WData)./(vy); %m - slope z/y
 coefficientsz(:,4)=TrackingData.ZPosition(index)-(TrackingData.YPosition(index).*coefficientsz(:,3));% b point
 z1=coefficientsz(:,2);
 z2=(coefficientsz(:,1).*0.6)+coefficientsz(:,2);
