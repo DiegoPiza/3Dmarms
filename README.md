@@ -15,3 +15,4 @@ MATLAB (R2021b), tested on Microsoft Windows 10 Pro. ~15 min installation time
 - Fieldtrip toolbox (https://www.fieldtriptoolbox.org/).
 - PyGAM toolbox (https://pygam.readthedocs.io/en/latest/).
 - VR_EyeSignalClassification (https://github.com/JMTNeuroLab/VR_EyeSignalClassification) for analysis of eye movements.
+- N-dimensional histogram (https://www.mathworks.com/matlabcentral/fileexchange/23897-n-dimensional-histogram)
