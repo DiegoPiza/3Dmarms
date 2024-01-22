@@ -2,7 +2,7 @@
 This repository contains the source code to replicate the analyses that were done in this work (https://doi.org/10.1101/2023.05.24.542209).
 Sample data will accompany each script to run a demo.
 Instructions and run time to run the analyses will be included as comments in the scripts.
-The state of this repository is preliminary, we are still in the process of updating the scripts to improve readability and compatibility across platforms.
+
 
 <img src="https://user-images.githubusercontent.com/93541319/139712178-60d21343-d128-4e42-b2af-415fbab77901.png" width="500" height="300">
 
