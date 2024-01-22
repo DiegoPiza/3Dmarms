@@ -41,7 +41,7 @@ function [h_vel, v_vel, r_vel] = HeadVelocity(TrackingData, sr, gaus_kernel)
         inv = isnan(h_vel);
         h_vel = fillmissing(h_vel, 'linear', 'EndValues', 'none');
         % Gaussian kernel
-        sigma = floor(0.25 * sr); % 50 ms window
+        sigma = floor(0.25 * sr); % 250 ms window
         L = sigma * 12; % Length of 6 sigma each side
         alpha = ((L - 1) / sigma) / 2;
         h = 1 / (sqrt(2 * pi) * sigma); % Height of Gaussian
@@ -52,7 +52,7 @@ function [h_vel, v_vel, r_vel] = HeadVelocity(TrackingData, sr, gaus_kernel)
 
         inv = isnan(v_vel);
         v_vel = fillmissing(v_vel, 'linear', 'EndValues', 'none');
-        sigma = floor(0.25 * sr); % 50 ms window
+        sigma = floor(0.25 * sr); % 250 ms window
         L = sigma * 12; % Length of 6 sigma each side
         alpha = ((L - 1) / sigma) / 2;
         h = 1 / (sqrt(2 * pi) * sigma); % Height of Gaussian
@@ -63,7 +63,7 @@ function [h_vel, v_vel, r_vel] = HeadVelocity(TrackingData, sr, gaus_kernel)
 
         inv = isnan(r_vel);
         r_vel = fillmissing(r_vel, 'linear', 'EndValues', 'none');
-        sigma = floor(0.25 * sr); % 50 ms window
+        sigma = floor(0.25 * sr); % 250 ms window
         L = sigma * 12; % Length of 6 sigma each side
         alpha = ((L - 1) / sigma) / 2;
         h = 1 / (sqrt(2 * pi) * sigma); % Height of Gaussian
