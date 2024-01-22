@@ -1,5 +1,5 @@
 function maze_view=Head_Orientation_No_floors(TrackingData)
- % Head_Orientation_No_floors determines the orientation of an animal in a chamber.
+ % Head_Orientation_No_floors determines the head orientation/facing location/view of the animal inside the maze.
     %
     % Input:
     % - TrackingData: Structure containing the position and orientation data
