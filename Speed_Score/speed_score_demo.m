@@ -11,7 +11,7 @@ numofshuffle=1000; %number of shuffle
 sr=60; %sampling rate of  time series
 
 %gaussian kernel
-sigma=floor(0.05*sr);%50 ms window
+sigma=floor(0.25*sr);%250 ms window
 L=sigma*12; %length of 6 sigma each side
 alpha=((L-1)/sigma)/2;
 h = 1/(sqrt(2*pi)*sigma);   % height of Gaussian
