@@ -858,12 +858,24 @@ for i=1:height(GAM_models)
 end
 %% Plotting models predictions against firing rate
 figure
-plot((1:length(spikes))/sr,movmean(spikes,12).*sr,'Color',[0.4 0.4 0.4],'LineWidth',2);
+plot((1:length(spikes))/sr,movmean(spikes,sr/5).*sr,'Color',[0.4 0.4 0.4],'LineWidth',2);
 hold on
 spikes_model=double(gamagv.predict(X_array_gz_place_hd));
 plot((1:length(spikes))/sr,spikes_model.*sr,'Color',[1 0.2 0.2],'LineWidth',1.5);
+legend('real','model')
+
 ylabel('Firing Rate Hz')
 xlabel('Time (s)')
+
+%% Plotting crossvalidation results
+
+for i =1:n_folds
+    figure
+    plot(movmean(pyGAMcrossval.spikes_real_total{1, 1}{1, i},sr/5).*sr,'Color',[0.4 0.4 0.4],'LineWidth',2)
+    hold on
+    plot(movmean(pyGAMcrossval.spikes_model_total{1, 1}{1, i},sr/5).*sr,'Color',[1 0.2 0.2],'LineWidth',1.5)
+legend('real','model')
+end
 
 
 
