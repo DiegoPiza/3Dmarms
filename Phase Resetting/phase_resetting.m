@@ -38,7 +38,6 @@ end
 % Smoothed histogram plot
 hsmooth = imgaussfilt(h, 0.85);
 imagesc(hsmooth)
-colormap(brewermap(256, '*RdYlBu'));
 set(gca, 'TickDir', 'out');
 set(gca, 'YDir', 'normal')
 xticks([0:50:400])
