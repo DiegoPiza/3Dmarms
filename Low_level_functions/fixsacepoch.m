@@ -77,7 +77,7 @@ function [fix, start_end_sac, peaks_sac, start_end_fix, peaks_fix, locss, amplit
     end
 
     % Filter out fixations with less than 200ms in duration
-    valid = lengtha >= 14;
+    valid = lengtha >= floor(sr*0.2);
     [onset, term, pks, locs, amplitude, lengtha] = arrayfun(@(x) x(valid), {onset, term, pks, locs, amplitude, lengtha}, 'UniformOutput', false);
 
     % Construct fixation-related outputs
