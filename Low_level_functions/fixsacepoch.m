@@ -139,7 +139,7 @@ end
 
     % Filter out fixations with less than 200ms in duration
 
-time_cutoff=sr*0.2;
+time_cutoff=floor(sr*0.2);
 onset(lengtha<time_cutoff)=[];
 term(lengtha<time_cutoff)=  [];                %fix less than 200ms in duration
 pks(lengtha<time_cutoff)=[];
@@ -155,7 +155,7 @@ for i=1:length(onset)
         todelete=[todelete;i];
         continue
     else
-        if   length(onset(i)+1:term(i)-1)<12
+        if   length(onset(i)+1:term(i)-1)<11
             error('not correct length')
         end
         index=[index onset(i)+1:term(i)-1];
