@@ -6,6 +6,8 @@ function [fix, start_end_sac, peaks_sac, start_end_fix, peaks_fix, locss, amplit
 % start_end_fix= onset and offset timestamps of head fixations
 % locss= timestamps for the peak velocity of head movements
 % amplitudesac= amplitude in degrees of head movement
+
+    % Calculate angular velocity
 ang_vel=HeadSpeed(TrackingData,1/60,0);
 
 [h_vel v_vel r_vel] = HeadVelocity(TrackingData,1/60,0);
@@ -13,14 +15,19 @@ ang_vel=HeadSpeed(TrackingData,1/60,0);
 
 sr=60; %sampling rate
 
+    % Find saccade epochs
 
 epoch_ang=find_epochs(ang_vel,200,true,4);
+    % Initialize variables
+
 amplitude=nan([length(epoch_ang) 1]);
 pks=nan([length(epoch_ang) 1]);
 onset=nan([length(epoch_ang) 1]);
 term=nan([length(epoch_ang) 1]);
 locs=nan([length(epoch_ang) 1]);
 lengtha=nan([length(epoch_ang) 1]);
+
+    % Extract parameters for saccade epochs
 
 for i=1:length(epoch_ang)
 
@@ -40,6 +47,7 @@ for i=1:length(epoch_ang)
     end
 end
 
+    % Filter out movements with less than 10 deg amplitude and invalida frames
 
 onset(amplitude<10)=[];
 term(amplitude<10)=  [];                %movements less than 10 deg amplitude
@@ -82,6 +90,7 @@ pks(todelete,:)=[];
 amplitude(todelete,:)=[];
 amplitudesac=amplitude;
 
+  
 
 sac=index;
 
@@ -101,6 +110,7 @@ directionh(h_vel(locs)<0)=-1; % right
 
 %fix
 
+  % Find fixation epochs
 epoch_ang=find_epochs(ang_vel,200,false,1);
 amplitude=nan([length(epoch_ang) 1]);
 pks=nan([length(epoch_ang) 1]);
@@ -108,6 +118,7 @@ onset=nan([length(epoch_ang) 1]);
 term=nan([length(epoch_ang) 1]);
 locs=nan([length(epoch_ang) 1]);
 lengtha=nan([length(epoch_ang) 1]);
+    % Extract parameters for fixation epochs
 
 for i=1:length(epoch_ang)
 
@@ -126,14 +137,15 @@ for i=1:length(epoch_ang)
     end
 end
 
+    % Filter out fixations with less than 200ms in duration
 
-
-onset(lengtha<14)=[];
-term(lengtha<14)=  [];                %fix less than 200ms in duration
-pks(lengtha<14)=[];
-locs(lengtha<14)=[];
-amplitude(lengtha<14)=[];
-lengtha(lengtha<14)=[];
+time_cutoff=sr*0.2;
+onset(lengtha<time_cutoff)=[];
+term(lengtha<time_cutoff)=  [];                %fix less than 200ms in duration
+pks(lengtha<time_cutoff)=[];
+locs(lengtha<time_cutoff)=[];
+amplitude(lengtha<time_cutoff)=[];
+lengtha(lengtha<time_cutoff)=[];
 
 
 todelete=[];
