@@ -1,5 +1,5 @@
 %% This script runs the GAM analysis described in methods, and replicates figure S5c
-% To install GAM_models, follow the instructions here (https://GAM_models.readthedocs.io/en/latest/) for pip installation
+% To install pyGAM, follow the instructions here (https://pygam.readthedocs.io/en/latest/) for pip installation
 % gz models correspond to view, pl to place and hd to head direction
 clear all
 close all
