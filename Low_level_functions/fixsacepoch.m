@@ -38,7 +38,7 @@ for i=1:length(epoch_ang)
         term(i)=length(ang_vel);
     end
     [pks(i) locs(i)]=max(ang_vel(onset(i): term(i)));
-    locs(i)=onset(i)+locs(i);
+    locs(i)=onset(i)+locs(i)-1;
     amplitude(i)=sum((ang_vel(onset(i):term(i)).*0.0167));
     if ~isempty(epoch_ang(i).end_time)
         lengtha(i)=epoch_ang(i).epoch_length;
