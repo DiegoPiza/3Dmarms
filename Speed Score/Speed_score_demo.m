@@ -71,7 +71,7 @@ R = corr(spikes,heatm)
 score.Head_real{j}=R;
 
 Rsh=zeros([numofshuffle 1]);
-shift=randi([-90*sr 90*sr],[1000,1]); %-+ 90 sec shift
+shift=randi([-90*sr 90*sr],[numofshuffle,1]); %-+ 90 sec shift
 
 parfor i=1:numofshuffle
 ash=circshift(spikes,shift(i)); 
@@ -140,7 +140,7 @@ R = corr(spikes,heatm);
 score.Body_real{j}=R;
 
 Rsh=zeros([numofshuffle 1]);
-shift=randi([-90*sr 90*sr],[1000,1]); %-+ 90 sec shift
+shift=randi([-90*sr 90*sr],[numofshuffle,1]); %-+ 90 sec shift
 
 parfor i=1:numofshuffle
 ash=circshift(spikes,shift(i)); 
