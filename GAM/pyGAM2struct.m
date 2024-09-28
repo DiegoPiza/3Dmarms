@@ -1,113 +1,23 @@
 function structGAM=pyGAM2struct(pGAM)
-stats=struct(pGAM.statistics_);
-stats.pseudo_r2=struct(stats.pseudo_r2);
-% stats.cov=double(stats.cov);
-stats.GCV=[];
-stats.cov=[];
-stats.edof_per_coef=[];%struct(stats.edof_per_coef);
-stats.m_features=int64(stats.m_features);
-stats.n_samples=int64(stats.n_samples);
-stats.se=double(stats.se);
-stats.p_values=double(py.numpy.array(stats.p_values));
-stats.coef_=double(pGAM.coef_);
-terms=struct(pGAM.terms.info);
-terms=cell(terms.terms);
-for i=1:length(terms)-1
-    termst=struct(terms{1,i});
-   stats.basis(i)=  string(termst.basis);
-   stats.n_splines(i)=   double(termst.n_splines);
-   stats.spline_order(i)=   double(termst.spline_order);
-   stats.lam(i)=   double(termst.lam);
-   stats.dtype(i)=   string(termst.dtype);
+stats=struct(pGAM.statistics_);  % Convert the 'statistics_' property of pGAM to a MATLAB struct
+stats.pseudo_r2=struct(stats.pseudo_r2);  % Convert the 'pseudo_r2' field to a struct
+% stats.cov=double(stats.cov);  % (Commented out) Convert 'cov' field to double precision
+stats.GCV=[];  % Initialize 'GCV' field as empty
+stats.cov=[];  % Initialize 'cov' field as empty
+stats.edof_per_coef=[]; %struct(stats.edof_per_coef);  % Initialize 'edof_per_coef' as empty (original struct conversion commented out)
+stats.m_features=int64(stats.m_features);  % Convert 'm_features' field to 64-bit integer
+stats.n_samples=int64(stats.n_samples);  % Convert 'n_samples' field to 64-bit integer
+stats.se=double(stats.se);  % Convert 'se' field to double precision
+stats.p_values=double(py.numpy.array(stats.p_values));  % Convert 'p_values' from Python numpy array to double precision array
+stats.coef_=double(pGAM.coef_);  % Convert 'coef_' property of pGAM to double precision
+terms=struct(pGAM.terms.info);  % Convert 'terms.info' property of pGAM to a MATLAB struct
+terms=cell(terms.terms);  % Convert 'terms' field to a cell array
+for i=1:length(terms)-1  % Loop through each term except the last one
+    termst=struct(terms{1,i});  % Convert each term to a struct
+   stats.basis(i)=  string(termst.basis);  % Store 'basis' field as a string in 'stats.basis'
+   stats.n_splines(i)=   double(termst.n_splines);  % Store 'n_splines' field as double in 'stats.n_splines'
+   stats.spline_order(i)=   double(termst.spline_order);  % Store 'spline_order' field as double in 'stats.spline_order'
+   stats.lam(i)=   double(termst.lam);  % Store 'lam' field as double in 'stats.lam'
+   stats.dtype(i)=   string(termst.dtype);  % Store 'dtype' field as a string in 'stats.dtype'
 end
-structGAM=stats;
-% if time_diff>duration(1,0,0) 
-%    send_email('script update','script still runs','dbuitra2@gmail.com')
-%    time=datetime(now,'ConvertFrom','datenum');
-% end
-end
-%%
-% structGAM=table;
-% structGAM.unitID=pyGAM.unitID;
-% 
-% for i=1:height(pyGAM) 
-% 
-%     if any(strcmp('gz_pl_hd',fieldnames(pyGAM)))
-%         stats=pyGAM.gz_pl_hd{i,1};
-%         if isempty(stats)
-%         continue
-%         end
-%     stats=struct(stats.statistics_);
-%     stats.pseudo_r2=struct(stats.pseudo_r2);
-%     stats.cov=double(stats.cov);
-%     stats.p_values=struct(stats.p_values);
-%     stats.edof_per_coef=struct(stats.edof_per_coef);
-%     stats.m_features=int64(stats.m_features);
-%     stats.n_samples=int64(stats.n_samples);
-%     stats.se=double(stats.se);
-%     structGAM.gz_pl_hd{i}=stats;
-%     end
-%     if any(strcmp('hd',fieldnames(pyGAM)))
-%         stats=pyGAM.hd{i,1};
-%         if isempty(stats)
-%         continue
-%         end
-%     stats=struct(stats.statistics_);
-%     stats.pseudo_r2=struct(stats.pseudo_r2);
-%     stats.cov=double(stats.cov);
-%     stats.p_values=struct(stats.p_values);
-%     stats.edof_per_coef=struct(stats.edof_per_coef);
-%     stats.m_features=int64(stats.m_features);
-%     stats.n_samples=int64(stats.n_samples);
-%     stats.se=double(stats.se);
-%     structGAM.hd{i}=stats;
-%     end
-% 
-% 
-%     if any(strcmp('m1',fieldnames(pyGAM)))
-% 
-%     stats=pyGAM.m1{i,1};
-%     if isempty(stats)
-%         continue
-%     end
-%     stats=struct(stats.statistics_);
-%     stats.pseudo_r2=struct(stats.pseudo_r2);
-%     stats.cov=double(stats.cov);
-%     stats.p_values=struct(stats.p_values);
-%     stats.edof_per_coef=struct(stats.edof_per_coef);
-%     stats.m_features=int64(stats.m_features);
-%     stats.n_samples=int64(stats.n_samples);
-%     stats.se=double(stats.se);
-%     structGAM.m1{i}=stats;
-% 
-%     stats=pyGAM.m2{i,1};
-%     stats=struct(stats.statistics_);
-%     stats.pseudo_r2=struct(stats.pseudo_r2);
-%     stats.cov=double(stats.cov);
-%     stats.p_values=struct(stats.p_values);
-%     stats.edof_per_coef=struct(stats.edof_per_coef);
-%     stats.m_features=int64(stats.m_features);
-%     stats.n_samples=int64(stats.n_samples);
-%     stats.se=double(stats.se);
-%     structGAM.m2{i}=stats;
-% 
-%      stats=pyGAM.m3{i,1};
-%     stats=struct(stats.statistics_);
-%     stats.pseudo_r2=struct(stats.pseudo_r2);
-%     stats.cov=double(stats.cov);
-%     stats.p_values=struct(stats.p_values);
-%     stats.edof_per_coef=struct(stats.edof_per_coef);
-%     stats.m_features=int64(stats.m_features);
-%     stats.n_samples=int64(stats.n_samples);
-%     stats.se=double(stats.se);
-%     structGAM.m3{i}=stats;
-%     end
-% end
-% 
-% cd '\\martinezsrv.robarts.ca\martinez_data$\Diego Buitrago-Piza\Data\Results\pyGAM'
-% 
-% save('onlyspeed_v2_struct_gamC.mat','structGAM')
-% 
-% save('gz_pl_hd_struct_gamPB.mat','structGAM')
-
-%save('temp2_struct_gamC.mat','structGAM')
+structGAM=stats;  % Return the 'stats' struct as 'structGAM'
