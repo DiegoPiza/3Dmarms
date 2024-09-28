@@ -20,15 +20,12 @@ lams = lams * 6 - 3 ;
 lams = py.numpy.array([10.^lams]) ;
 types_ID=string(compactWave.UnitIDs);
 
-
-
-%Replace bellow with your python environment path
+% Replace below with your python environment path
 setenv('path',['...\AppData\Local\Programs\Python', getenv('path')]);
 pe=pyenv('Version','...\AppData\Local\Programs\Python\Python310\pythonw.exe',...
     'ExecutionMode','InProcess');
 
-
-%%
+%% Data preprocessing
 TrackingData=even_TData(TrackingData);
 puls=TrackingData.neural_time;
 fields=fieldnames(units.singleunits);
@@ -37,27 +34,28 @@ invalid_frames=isnan(heatmrawf(:,1));
 angl_vel=HeadSpeed(TrackingData,1/60,1);
 body_vel=TracVelocity(TrackingData,0.0167,2);
 
-%
+% Extract unit data
 unit=units.singleunits.(neuron);
 
 unitID=neuron;
 type_i=find(unitID==types_ID);
 if isempty(type_i)
     error('no neuronal type info')
-
 end
-%%
 
+%% Determine neuron type
 neuron_type=compactWave.NeuronType(type_i);
 
 gapt=find(gap)./30000; %in seconds
 
+% Identify invalid frames and prepare spike data
 inv_frm=ismember(puls,gapt);
 spikes=histc(unit,puls);
 agv=angl_vel;
 bdv=body_vel;
 
-if length(spikes)> length(TrackingData.XPosition) %Cheks if Tracking data is longer than the neural data
+% Ensure tracking data and neural data have the same length
+if length(spikes)> length(TrackingData.XPosition) %Checks if Tracking data is longer than the neural data
     spikes=spikes(1:length(TrackingData.XPosition));
     agv(length(TrackingData.XPosition))=nan;
     bdv(length(TrackingData.XPosition))=nan;
@@ -71,21 +69,21 @@ else
 end
 invalid_frames(inv_frm)=true;
 
+% Remove invalid frames from spike data
 spikes(invalid_frames)=[];
 
-
-
+% Remove invalid frames from velocity data
 agv(invalid_frames,:)=[];
 bdv(invalid_frames,:)=[];
 
-
+% Import pygam module
 np=py.importlib.import_module('pygam');
 agv(isnan(bdv))=nan;
 spikes(isnan(agv))=[];
 bdv(isnan(agv))=[];
 agv(isnan(agv))=[];
 
-
+% Create histograms for angular and body velocity
 [countt edges  loc] = histcounts(agv,20); %M x N MATRIX Histogram
 
 %invalid Bins --> spent less than 1 second or visited less than 3
@@ -126,6 +124,7 @@ countt(binvisit<3)=nan;
 
 bdv(ismember(loc,(find(isnan(countt)))))=nan;
 
+% Prepare spike data for different velocity measures
 spikes_agv=spikes;
 spikes_bvd=spikes;
 
@@ -140,7 +139,7 @@ spikes_speed(isnan(bdv))=[];
 agv(isnan(bdv))=[];
 bdv(isnan(bdv))=[];
 
-
+% Convert data to numpy arrays for pyGAM
 X_arrayang_vel=py.numpy.array([agv]);
 X_arrayb_vel=py.numpy.array([bdv]);
 X_arrayboth_vel=py.numpy.array([agv bdv]);
@@ -148,14 +147,13 @@ X_arrayboth_vel=py.numpy.array([agv bdv]);
 y_array_agv=py.numpy.array(spikes_speed);
 y_array_bvd=py.numpy.array(spikes_speed);
 
-
-
-
-
+% Check neuron type and perform GAM analysis
 if neuron_type=="Int"
     X_arrayang_vel=py.numpy.array([agv]);
     X_arrayb_vel=py.numpy.array([bdv]);
     X_arrayboth_vel=py.numpy.array([agv bdv]);
+    
+    % Fit GAM for angular head velocity
     gamagv=np.GAM(pyargs('distribution','poisson','link','log'));
     gamagv=gamagv.fit(X_arrayang_vel ,y_array_agv);
     gam_grid_agv=gamagv.gridsearch(X_arrayang_vel ,y_array_agv,pyargs('lam',lams));
@@ -164,6 +162,7 @@ if neuron_type=="Int"
     sr=60;
     shift=randi([5*sr length(spikes_speed)-(5*sr)],[shuffle_number,1]); %-+ 90 sec shift
 
+    % Perform shuffling for angular head velocity
     shuffle_agv=cell(shuffle_number,1);
     shuffle_ev_agv=nan(shuffle_number,1);
     for i=1:shuffle_number
@@ -176,12 +175,7 @@ if neuron_type=="Int"
         shuffle_ev_agv(i)=gam_grid_agv_shuffle.pseudo_r2.explained_deviance;
     end
 
-
-    % for i = 1:100
-    %  shuffle_ev_agv(i)=   pyGAM.agv_shuffle{1,1}{i, 1}.pseudo_r2.explained_deviance;
-    % end
-
-    %statistics
+    % Perform statistical analysis for angular head velocity
     Rsh=shuffle_ev_agv;
     R=gam_grid_agv.pseudo_r2.explained_deviance;
     mu = mean(Rsh);
@@ -194,13 +188,14 @@ if neuron_type=="Int"
     gam_grid_agv.shuffle_ED_mu=mu;
     gam_grid_agv.shuffle_ED_sigma=sigma;
 
-
+    % Fit GAM for body velocity
     gambv=np.GAM(pyargs('distribution','poisson','link','log'));
     gambv=gambv.fit(X_arrayb_vel,y_array_bvd);
     gam_grid_bv=gambv.gridsearch(X_arrayb_vel,y_array_bvd,pyargs('lam',lams));
     gam_grid_bv=pyGAM2struct(gam_grid_bv);
     lambv=gam_grid_bv.lam;
 
+    % Perform shuffling for body velocity
     shuffle_bv=cell(shuffle_number,1);
     shuffle_ev_bv=nan(shuffle_number,1);
     for i=1:shuffle_number
@@ -213,6 +208,7 @@ if neuron_type=="Int"
         shuffle_ev_bv(i)=gam_grid_bv_sh.pseudo_r2.explained_deviance;
     end
 
+    % Perform statistical analysis for body velocity
     Rsh=shuffle_ev_bv;
     R=gam_grid_bv.pseudo_r2.explained_deviance;
     mu = mean(Rsh);
@@ -225,14 +221,7 @@ if neuron_type=="Int"
     gam_grid_bv.shuffle_ED_mu=mu;
     gam_grid_bv.shuffle_ED_sigma=sigma;
 
-    % for i = 1:100
-    % shuffle_ev_bv(i)=   pyGAM.bv_shuffle{1,1}{i, 1}.pseudo_r2.explained_deviance;
-    % end
-
-
-
-    %
-
+    % Determine the best model
     models_reject=[gam_grid_agv.reject_h0 gam_grid_bv.reject_h0];
     models_ED=[gam_grid_agv.ED_normalized2shuffle gam_grid_bv.ED_normalized2shuffle];
     [m top_model]=max(models_ED)
@@ -260,10 +249,7 @@ if neuron_type=="Int"
         GAM_models.agv_bv_shuffle{jj}=shuffle_both;
     end
 
-
-
-
-
+    % Store results in GAM_models
     GAM_models.agv{jj}=gam_grid_agv;
     GAM_models.bv{jj}=gam_grid_bv;
 
@@ -274,8 +260,6 @@ if neuron_type=="Int"
 else
     error('neuron is not a pyramidal cell')
 end
-
-
 
 %% Checking the best model
 % bestmodel combinations 1=AHV 2=TS 3=AHV+TS
