@@ -1,183 +1,172 @@
 %% Speed Time series analysis  https://www.sciencedirect.com/science/article/pii/S2211124718316437#fig3
-%Zé Henrique T.D. Góis - Characterizing Speed Cells in the Rat Hippocampus
-rng shuffle
-clear all
-close all
+%Similar to Zé Henrique T.D. Góis - Characterizing Speed Cells in the Rat Hippocampus
+rng shuffle                 % Seed the random number generator
+clear all                   % Clear workspace
+close all                   % Close all figure windows
 %%
-load sample_data.mat
+load sample_data.mat        % Load sample data
 %%
-speed_score=table;
+speed_score = table;        % Initialize table to store speed scores
 
-numofshuffle=1000; %number of shuffle
-sr=60; %sampling rate of  time series
+numofshuffle = 1000;        % Number of shuffles for permutation test
+sr = 60;                    % Sampling rate of time series
 
-%gaussian kernel
-sigma=floor(0.25*sr);%250 ms window
-L=sigma*12; %length of 6 sigma each side
-alpha=((L-1)/sigma)/2;
-h = 1/(sqrt(2*pi)*sigma);   % height of Gaussian
-w=gausswin(L,alpha)*h; % The exact correspondence with the standard deviation of a Gaussian probability density function is σ = (L – 1)/(2α).
-w(w < h*1.e-3)=[]; %deleting gausian edges
-plot_figures=false;
+% Gaussian kernel parameters
+sigma = floor(0.25 * sr);   % Standard deviation (250 ms window)
+L = sigma * 12;             % Length of the window (6 sigma on each side)
+alpha = ((L - 1) / sigma) / 2;  % Alpha parameter for Gaussian window
+h = 1 / (sqrt(2 * pi) * sigma); % Height of the Gaussian
+w = gausswin(L, alpha) * h; % Generate Gaussian window
+% The exact correspondence with the standard deviation of a Gaussian probability density function is σ = (L – 1)/(2α).
+w(w < h * 1.e-3) = [];      % Delete negligible Gaussian edges
+plot_figures = false;       % Flag to control plotting
 
-fields=fieldnames(units.singleunits);
-score=table;      
-for j=1:length(fields)
-unitID=string(fields(j));
-neuron=char(fields(j))
+fields = fieldnames(units.singleunits); % Get field names of single units
+score = table;                         % Initialize table to store scores
+for j = 1:length(fields)
+    unitID = string(fields(j));                % Convert field name to string
+    neuron = char(fields(j));                  % Convert field name to character array
 
-unit=units.singleunits.(neuron);
-if length(unit)<250
-    continue
-end
-score.unitID{j}=unitID;
+    unit = units.singleunits.(neuron);         % Access unit data
+    if length(unit) < 250
+        continue                               % Skip units with less than 250 data points
+    end
+    score.unitID{j} = unitID;                  % Store unit ID in score table
 
-%%
-puls=TrackingData.neural_time;
-close all
+    %%
+    puls = TrackingData.neural_time;           % Get neural time pulses
+    close all
 
-gapt=find(gap)./30000; %in seconds
+    gapt = find(gap) ./ 30000;                 % Find gaps in data (in seconds)
 
-inv_frm=ismember(puls,gapt);
+    inv_frm = ismember(puls, gapt);            % Identify invalid frames
 
-spikes=histc(unit,puls);
-heatm=HeadSpeed(TrackingData,1/60,1);
-heatm(TrackingData.XPosition>0.6,:)=nan;
-heatm(TrackingData.XPosition<0,:)=nan;
-heatm(TrackingData.YPosition<0,:)=nan; 
-heatm(TrackingData.YPosition>1.14,:)=nan;
-heatm(TrackingData.ZPosition<0,:)=nan;
+    spikes = histc(unit, puls);                % Histogram of spikes aligned to neural time pulses
+    heatm = HeadSpeed(TrackingData, 1/60, 1);  % Calculate head speed
+    heatm(TrackingData.XPosition > 0.6, :) = nan;    % Set out-of-bounds X positions to NaN
+    heatm(TrackingData.XPosition < 0, :) = nan;
+    heatm(TrackingData.YPosition < 0, :) = nan;      % Set out-of-bounds Y positions to NaN
+    heatm(TrackingData.YPosition > 1.14, :) = nan;
+    heatm(TrackingData.ZPosition < 0, :) = nan;      % Set out-of-bounds Z positions to NaN
 
-heatm(heatm>2000,:)=nan;
+    heatm(heatm > 2000, :) = nan;              % Remove unrealistic head speed values
 
-if length(spikes)> length(heatm) %Cheks if Tracking data is longer than the neural data
-spikes=spikes(1:length(heatm));
-inv_frm=inv_frm(1:length(heatm));
-else 
-heatm=heatm(1:length(spikes),:); 
-inv_frm=inv_frm(1:length(spikes),:);
-end
+    if length(spikes) > length(heatm)          % Check if neural data is longer than tracking data
+        spikes = spikes(1:length(heatm));      % Truncate spikes to match heatm length
+        inv_frm = inv_frm(1:length(heatm));    % Truncate invalid frames indicator
+    else
+        heatm = heatm(1:length(spikes), :);    % Truncate heatm to match spikes length
+        inv_frm = inv_frm(1:length(spikes), :);
+    end
 
-heatm(inv_frm,:)=nan;
+    heatm(inv_frm, :) = nan;                   % Set invalid frames to NaN
 
-%gausian kernel
-spikes=conv(spikes,w,'same'); 
-%deleting nans
-spikes(isnan(heatm(:,1)))=[];
-heatm(isnan(heatm(:,1)),:)=[];
+    % Gaussian kernel smoothing
+    spikes = conv(spikes, w, 'same');          % Convolve spikes with Gaussian window
+    % Remove NaNs
+    spikes(isnan(heatm(:, 1))) = [];           % Remove spikes where heatm is NaN
+    heatm(isnan(heatm(:, 1)), :) = [];         % Remove corresponding heatm entries
 
+    R = corr(spikes, heatm);                   % Calculate correlation between spikes and head speed
+    score.Head_real{j} = R;                    % Store real correlation score
 
-R = corr(spikes,heatm)
-score.Head_real{j}=R;
+    Rsh = zeros([numofshuffle, 1]);            % Initialize array for shuffled correlations
+    shift = randi([-90 * sr, 90 * sr], [numofshuffle, 1]); % Random shifts between -90s and +90s
 
-Rsh=zeros([numofshuffle 1]);
-shift=randi([-90*sr 90*sr],[numofshuffle,1]); %-+ 90 sec shift
+    parfor i = 1:numofshuffle
+        ash = circshift(spikes, shift(i));     % Circularly shift spikes
+        Rsh(i) = corr(ash, heatm);             % Calculate correlation with shifted spikes
+    end
+    score.Head_sh{j} = Rsh;                    % Store shuffled correlation scores
+    % Statistical analysis
+    mu = mean(Rsh);                            % Mean of shuffled correlations
+    sigma_stats = std(Rsh);                    % Standard deviation of shuffled correlations
+    p_val = 1 - normcdf(R, mu, sigma_stats);   % Calculate p-value
+    reject_h0 = p_val < 0.05 / length(spikes); % Hypothesis testing with Bonferroni correction
+    score.head_p_val{j} = p_val;               % Store p-value
+    score.head_reject_h0{j} = reject_h0;       % Store hypothesis test result
+    %% Plotting
 
-parfor i=1:numofshuffle
-ash=circshift(spikes,shift(i)); 
-Rsh(i)=corr(ash,heatm);
-end
-score.Head_sh{j}=Rsh;
-%statistics
-    mu = mean(Rsh);
-    sigma_stats = std(Rsh);
-    p_val = 1 - normcdf(R,mu,sigma_stats);
-    reject_h0 = p_val < 0.05/length(spikes);
-score.head_p_val{j}=p_val;
-score.head_reject_h0{j}=reject_h0;       
-%% plotting
+    if plot_figures == true
+        h_fig2 = figure('units', 'normalized', 'position', [0 0 1 1]); % Create full-screen figure
+        subplot(2, 1, 1)
+        histogram(Rsh, 'normalization', 'pdf');                        % Plot histogram of shuffled correlations
+        hold all
+        shuff_xs = linspace(min(Rsh), max(Rsh), 100);                  % X-axis values for normal curve
+        shuff_curve = normpdf(shuff_xs, mu, sigma_stats);              % Normal distribution curve
+        h_line1 = plot(shuff_xs, shuff_curve, '--b', 'linewidth', 2);  % Plot normal distribution
+        h_line2 = line([R R], get(gca, 'ylim'), 'color', 'r', 'linewidth', 3); % Plot line for real correlation
+        legend([h_line1, h_line2], {'Shuffled'; 'Real'}, 'location', 'northeastoutside')
+        title('Head Speed Distribution of shuffled total Speed Score')
+        xlabel({'Speed Score (Corr)'})
+        ylabel('Probability density')
+        text(0.2, 10, char(['Head Speed Score: ' num2str(R)]))         % Display real correlation
+        text(0.2, 15, char(['Permutation test p-value: ' num2str(p_val)])) % Display p-value
+    end
 
-if plot_figures==true
-            h_fig2 = figure('units','normalized','position',[0 0 1 1]);
-            subplot(2,1,1)
-            histogram(Rsh,'normalization','pdf');
-             hold all
-             shuff_xs = linspace(min(Rsh),max(Rsh),100);
-             shuff_curve = normpdf(shuff_xs,mu,sigma_stats);
-             h_line1 = plot(shuff_xs,shuff_curve,'--b','linewidth',2);
-             h_line2 = line([R R],get(gca,'ylim'),'color','r','linewidth',3);
-             legend([h_line1,h_line2],{'Shuffled'; 'Real'},'location','northeastoutside')
-             title('Head Speed Distribution of shufled total Speed Score')
-             xlabel({'Speed Score (Corr)'})
-             ylabel('Probability density')
-             text(0.2,10,char(['Head Speed Score: ' num2str(R)]))
-            text(0.2,15,char(['Permutation test p-value: ' num2str(p_val)]))
-             
-end
+    spikes = histc(unit, puls);                % Recalculate spikes histogram
 
+    heatm = TracVelocity(TrackingData, 1/60, 1); % Calculate body velocity
+    heatm(TrackingData.XPosition > 0.6, :) = nan; % Set out-of-bounds X positions to NaN
+    heatm(TrackingData.XPosition < 0, :) = nan;
+    heatm(TrackingData.YPosition < 0, :) = nan;   % Set out-of-bounds Y positions to NaN
+    heatm(TrackingData.YPosition > 1.14, :) = nan;
+    heatm(TrackingData.ZPosition < 0, :) = nan;
+    heatm(heatm > 300, :) = nan;               % Remove unrealistic body speed values
 
+    if length(spikes) > length(heatm)          % Check if neural data is longer than tracking data
+        spikes = spikes(1:length(heatm));      % Truncate spikes to match heatm length
+        inv_frm = inv_frm(1:length(heatm));    % Truncate invalid frames indicator
+    else
+        heatm = heatm(1:length(spikes), :);    % Truncate heatm to match spikes length
+        inv_frm = inv_frm(1:length(spikes), :);
+    end
 
-spikes=histc(unit,puls);
+    heatm(inv_frm, :) = nan;                   % Set invalid frames to NaN
 
-heatm=TracVelocity(TrackingData,1/60,1);
-heatm(TrackingData.XPosition>0.6,:)=nan;
-heatm(TrackingData.XPosition<0,:)=nan;
-heatm(TrackingData.YPosition<0,:)=nan; 
-heatm(TrackingData.YPosition>1.14,:)=nan;
-heatm(TrackingData.ZPosition<0,:)=nan;
-heatm(heatm>300,:)=nan;
+    % Gaussian kernel smoothing
+    spikes = conv(spikes, w, 'same');          % Convolve spikes with Gaussian window
+    % Remove NaNs
+    spikes(isnan(heatm(:, 1))) = [];           % Remove spikes where heatm is NaN
+    heatm(isnan(heatm(:, 1)), :) = [];         % Remove corresponding heatm entries
 
+    R = corr(spikes, heatm);                   % Calculate correlation between spikes and body speed
+    score.Body_real{j} = R;                    % Store real correlation score
 
-if length(spikes)> length(heatm) %Cheks if Tracking data is longer than the neural data
-spikes=spikes(1:length(heatm));
-inv_frm=inv_frm(1:length(heatm));
-else 
-heatm=heatm(1:length(spikes),:); 
-inv_frm=inv_frm(1:length(spikes),:);
-end
+    Rsh = zeros([numofshuffle, 1]);            % Initialize array for shuffled correlations
+    shift = randi([-90 * sr, 90 * sr], [numofshuffle, 1]); % Random shifts between -90s and +90s
 
-heatm(inv_frm,:)=nan;
+    parfor i = 1:numofshuffle
+        ash = circshift(spikes, shift(i));     % Circularly shift spikes
+        Rsh(i) = corr(ash, heatm);             % Calculate correlation with shifted spikes
+    end
 
+    score.Body_sh{j} = Rsh;                    % Store shuffled correlation scores
+    % Statistical analysis
+    mu = mean(Rsh);                            % Mean of shuffled correlations
+    sigma_stats = std(Rsh);                    % Standard deviation of shuffled correlations
+    p_val = 1 - normcdf(R, mu, sigma_stats);   % Calculate p-value
+    reject_h0 = p_val < 0.05 / length(spikes); % Hypothesis testing with Bonferroni correction
+    score.body_p_val{j} = p_val;               % Store p-value
+    score.body_reject_h0{j} = reject_h0;       % Store hypothesis test result
 
+    %% Plotting
 
-%gausian kernel
-spikes=conv(spikes,w,'same'); 
-%deleting nans
-spikes(isnan(heatm(:,1)))=[];
-heatm(isnan(heatm(:,1)),:)=[];
+    if plot_figures == true
+        subplot(2, 1, 2)
 
-R = corr(spikes,heatm);
-score.Body_real{j}=R;
-
-Rsh=zeros([numofshuffle 1]);
-shift=randi([-90*sr 90*sr],[numofshuffle,1]); %-+ 90 sec shift
-
-parfor i=1:numofshuffle
-ash=circshift(spikes,shift(i)); 
-Rsh(i)=corr(ash,heatm);
-end
-
-
-score.Body_sh{j}=Rsh;
-%statistics
-    mu = mean(Rsh);
-    sigma_stats = std(Rsh);
-    p_val = 1 - normcdf(R,mu,sigma_stats);
-    reject_h0 = p_val < 0.05/length(spikes);
-score.body_p_val{j}=p_val;
-score.body_reject_h0{j}=reject_h0;
-         
-
-
-%% plotting
-
-if plot_figures==true
-            subplot(2,1,2)
-            
-            histogram(Rsh,'normalization','pdf');
-             hold all
-             shuff_xs = linspace(min(Rsh),max(Rsh),100);
-             shuff_curve = normpdf(shuff_xs,mu,sigma_stats);
-             h_line1 = plot(shuff_xs,shuff_curve,'--b','linewidth',2);
-             h_line2 = line([R R],get(gca,'ylim'),'color','r','linewidth',3);
-             legend([h_line1,h_line2],{'Shuffled'; 'Real'},'location','northeastoutside')
-             title('Body Speed Distribution of shufled total Speed Score')
-             xlabel({'Speed Score (Corr)'})
-             ylabel('Probability density')
-             text(0.2,10,char(['Body Vel Speed Score: ' num2str(R)]))
-            text(0.2,15,char(['Permutation test p-value: ' num2str(p_val)]))           
-                       
-end
+        histogram(Rsh, 'normalization', 'pdf');                        % Plot histogram of shuffled correlations
+        hold all
+        shuff_xs = linspace(min(Rsh), max(Rsh), 100);                  % X-axis values for normal curve
+        shuff_curve = normpdf(shuff_xs, mu, sigma_stats);              % Normal distribution curve
+        h_line1 = plot(shuff_xs, shuff_curve, '--b', 'linewidth', 2);  % Plot normal distribution
+        h_line2 = line([R R], get(gca, 'ylim'), 'color', 'r', 'linewidth', 3); % Plot line for real correlation
+        legend([h_line1, h_line2], {'Shuffled'; 'Real'}, 'location', 'northeastoutside')
+        title('Body Speed Distribution of shuffled total Speed Score')
+        xlabel({'Speed Score (Corr)'})
+        ylabel('Probability density')
+        text(0.2, 10, char(['Body Vel Speed Score: ' num2str(R)]))     % Display real correlation
+        text(0.2, 15, char(['Permutation test p-value: ' num2str(p_val)])) % Display p-value
+    end
 
 end
-
