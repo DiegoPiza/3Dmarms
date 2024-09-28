@@ -12,15 +12,12 @@ neuron='S20190619C27_18' ; %ID of Neuron to model
 n_folds=5; % how many crossvalidation partitions
 sr=60;% data sampling rate
 
-
-
 %Replace bellow with your python environment path
 setenv('path',['...\AppData\Local\Programs\Python', getenv('path')]);
 pe=pyenv('Version','...\AppData\Local\Programs\Python\Python310\pythonw.exe',...
     'ExecutionMode','InProcess');
 
-
-%%
+%% Prepare data and set up variables
 types_ID=string(compactWave.UnitIDs);
 lams = rand([grid_number 3]); %labda values (smoothing penalization)
 lams = lams * 6 - 3 ;
@@ -36,6 +33,7 @@ heatm(:,3)=TrackingData.ZPosition;
 invalid_frames=isnan(heatmrawf(:,1));
 heatmpos=heatm;
 
+% Calculate rotation angles from quaternions
 q1=TrackingData.WQuat;
 q2=TrackingData.iXQuat;
 q3=TrackingData.jYQuat;
@@ -44,8 +42,7 @@ q4=TrackingData.kZQuat;
 [x_rot y_rot z_rot] = quat2angle([q1 q2 q3 q4]);
 GAM_models=table('Size',[1,15],'VariableTypes',variable_types,'VariableNames',variable_names);
 
-
-
+% Get unit data and type
 unit=units.singleunits.(neuron);
 
 unitID=string(neuron);
@@ -58,11 +55,13 @@ neuron_type=compactWave.NeuronType(type_i);
 
 gapt=find(gap)./30000; %in seconds
 
+% Prepare spike and position data
 inv_frm=ismember(puls,gapt);
 spikes=histc(unit,puls);
 heatm=heatmpos;
 heatmgzf=heatmrawf;
 
+% Ensure all data arrays have the same length
 if length(spikes)> length(TrackingData.XPosition) %Cheks if Tracking data is longer than the neural data
     spikes=spikes(1:length(TrackingData.XPosition));
     inv_frm=inv_frm(1:length(TrackingData.XPosition));
@@ -75,6 +74,7 @@ else
 end
 invalid_frames(inv_frm)=true;
 
+% Remove invalid frames from all data arrays
 spikes(invalid_frames)=[];
 heatm(invalid_frames,:)=[];
 
@@ -97,6 +97,8 @@ z_r(invalid_frames,:)=[];
 
 close all
 np=py.importlib.import_module('pygam');
+
+% Remove NaN values from all arrays
 spikes(isnan(Zgf))=[];
 X(isnan(Zgf))=[];
 Y(isnan(Zgf))=[];
@@ -108,6 +110,7 @@ Xgf(isnan(Zgf))=[];
 Ygf(isnan(Zgf))=[];
 Zgf(isnan(Zgf))=[];
 
+% Create numpy arrays for different combinations of variables
 X_arrayhd=py.numpy.array([x_r y_r z_r]);
 X_arraygz=py.numpy.array([Xgf Ygf Zgf]);
 X_arrayplace=py.numpy.array([X Y Z]);
@@ -122,10 +125,9 @@ X_array_place_hd=py.numpy.array([X Y Z x_r y_r z_r]);
 
 X_array_gz_hd=py.numpy.array([Xgf Ygf Zgf x_r y_r z_r]);
 
-
 y_array=py.numpy.array(spikes);
 
-
+% Check if the neuron is pyramidal and perform GAM analysis
 if neuron_type=="Pyr"
 
     if isempty(GAM_models.unitID{1})
@@ -136,12 +138,13 @@ if neuron_type=="Pyr"
         GAM_models.unitID{jj}=unitID;
     end
 
-
+    % Fit GAM model for gaze (gz)
     gamgz=np.GAM(pyargs('distribution','poisson','link','log'));
     gam_grid_gz=gamgz.gridsearch(X_arraygz ,y_array,pyargs('lam',lams));
     gam_grid_gz=pyGAM2struct(gam_grid_gz);
     lamgz=gam_grid_gz.lam;
 
+    % Perform shuffling analysis for gz model
     shift=randi([5*sr length(spikes)-(5*sr)],[shuffle_number,1]); %-+ 5 sec shift
 
     shuffle_gz=cell(shuffle_number,1);
@@ -156,8 +159,7 @@ if neuron_type=="Pyr"
         shuffle_ev_gz(i)=gam_grid_gz_shuffle.pseudo_r2.explained_deviance;
     end
 
-
-    %statistics
+    % Calculate statistics for gz model
     Rsh=shuffle_ev_gz;
     R=gam_grid_gz.pseudo_r2.explained_deviance;
     mu = mean(Rsh);
@@ -173,13 +175,13 @@ if neuron_type=="Pyr"
     gam_grid_gz.shuffle_ED_mu=mu;
     gam_grid_gz.shuffle_ED_sigma=sigma;
 
-
-
+    % Fit GAM model for place (pl)
     gampl=np.GAM(pyargs('distribution','poisson','link','log'));
     gam_grid_pl=gampl.gridsearch(X_arrayplace ,y_array,pyargs('lam',lams));
     gam_grid_pl=pyGAM2struct(gam_grid_pl);
     lampl=gam_grid_pl.lam;
 
+    % Perform shuffling analysis for pl model
     shuffle_pl=cell(shuffle_number,1);
     shuffle_ev_pl=nan(shuffle_number,1);
     for i=1:shuffle_number
@@ -192,7 +194,7 @@ if neuron_type=="Pyr"
         shuffle_ev_pl(i)=gam_grid_pl_shuffle.pseudo_r2.explained_deviance;
     end
 
-    %statistics
+    % Calculate statistics for pl model
     Rsh=shuffle_ev_pl;
     R=gam_grid_pl.pseudo_r2.explained_deviance;
     mu = mean(Rsh);
@@ -208,12 +210,13 @@ if neuron_type=="Pyr"
     gam_grid_pl.shuffle_ED_mu=mu;
     gam_grid_pl.shuffle_ED_sigma=sigma;
 
-
+    % Fit GAM model for head direction (hd)
     gamhd=np.GAM(pyargs('distribution','poisson','link','log'));
     gam_grid_hd=gamhd.gridsearch(X_arrayhd ,y_array,pyargs('lam',lams));
     gam_grid_hd=pyGAM2struct(gam_grid_hd);
     lamhd=gam_grid_hd.lam;
 
+    % Perform shuffling analysis for hd model
     shuffle_hd=cell(shuffle_number,1);
     shuffle_ev_hd=nan(shuffle_number,1);
     for i=1:shuffle_number
@@ -226,7 +229,7 @@ if neuron_type=="Pyr"
         shuffle_ev_hd(i)=gam_grid_hd_shuffle.pseudo_r2.explained_deviance;
     end
 
-    %statistics
+    % Calculate statistics for hd model
     Rsh=shuffle_ev_hd;
     R=gam_grid_hd.pseudo_r2.explained_deviance;
     mu = mean(Rsh);
@@ -242,6 +245,7 @@ if neuron_type=="Pyr"
     gam_grid_hd.shuffle_ED_mu=mu;
     gam_grid_hd.shuffle_ED_sigma=sigma;
 
+    % Determine the best model based on explained deviance
     models_reject=[gam_grid_gz.reject_h0 gam_grid_pl.reject_h0 gam_grid_hd.reject_h0];
     models_ED=[gam_grid_gz.ED_normalized2shuffle gam_grid_pl.ED_normalized2shuffle gam_grid_hd.ED_normalized2shuffle];
     [m top_model]=max(models_ED)
